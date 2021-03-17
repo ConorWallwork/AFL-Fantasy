@@ -65,7 +65,7 @@ def main():
     print("hello world")
     players = getPlayersFromFile("players2019.csv", True)
 
-    print(linearOptimisation(players, True, 12800000))
+    print(linearOptimisation(players, False, 10800000))
 
 
 if __name__ == "__main__":
