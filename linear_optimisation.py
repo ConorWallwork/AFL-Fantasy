@@ -62,14 +62,13 @@ def linearOptimisation(players, useBench, budget):
 
 def main():
 
-    print("hello world")
-    players = playersFromCSV("players2019.csv")
+    players = playersFromCSV("players2020round3.csv")
 
     for p in players:
         if p.value == None or p.price == None or p.position not in ["Ruck", "Forward", "Midfield", "Defender"]:
             players.remove(p)
-            print(p)
-    print(linearOptimisation(players, False, 10800000))
+            print(p.name+str(p.value))
+    print(linearOptimisation(players, False, 11000000))
 
 
 if __name__ == "__main__":
