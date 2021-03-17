@@ -69,32 +69,37 @@ def getPartialSeasonPlayerMatrix(players, firstRound, lastRound, url):
     page = Page(url, partialseasonGetNextPage, partialseasonIsLastPage)
     playerNames = [p.name for p in players]
     playermatrix = [[]]
-    playermatrix[0] = playerNames
+    playermatrix[0] = players
     playermatrix += [[0 for p in playerNames] for i in range(lastRound - firstRound + 1)]
 
     round = 1
     matrixrow = 1
     for p in page.getAllPages():
-        if(round< firstRound):
+        if(round < firstRound):
             round += 1
             continue
         if(round > lastRound):
             break
         else:
+            ## FIND THE FIRST ROW OF THE PLAYER TABLE
             firstrow = p.find("td", {"class":"bnorm"}).parent
             for row in firstrow.find_next_siblings("tr"):
                 name = row.contents[3]
                 name = name.find("a").text
                 points = row.contents[11]
                 points = points.text
-
                 found = False
-                for i in range(len(playerNames)):
-                    if playerNames[i] in name:
+                for i in range(len(players)):
+                    if players[i].name in name:
                         index = i
                         found = True
                         playermatrix[matrixrow][i] = points
-                if not found: print(name)        
+                        if players[i].price == None or players[i].price == "":
+                             price = row.contents[9].text
+
+                             price = "".join([i for i in price if i.isnumeric()])
+                             players[i].price = price
+                #if not found: print(name)
             #for name in playerNames:
             #    for row in round_table:
             #        print(row)
@@ -110,11 +115,12 @@ def main():
     partialSeasonURL = "https://www.footywire.com/afl/footy/dream_team_round?year=2019&round=15&p=&s=T"
     page = Page(partialSeasonURL, partialseasonGetNextPage, partialseasonIsLastPage)
 
-    players = getPlayersFromFile("players2019.csv", True)
-    matrix = getPartialSeasonPlayerMatrix(players, 1, 23, "https://www.footywire.com/afl/footy/dream_team_round?year=2019&round=1&p=&s=T")
+    players = playersFromCSV("players2019.csv")
+    matrix = getPartialSeasonPlayerMatrix(players, 1, 1, "https://www.footywire.com/afl/footy/dream_team_round?year=2019&round=1&p=&s=T")
 
+    print(matrix)
     a = numpy.asarray(matrix)
-    numpy.savetxt("allrounds2019.csv", a, delimiter=",", fmt='%s')
+    numpy.savetxt("firstround2019.csv", a, delimiter=",", fmt='%s')
 
 
 if __name__ == "__main__":

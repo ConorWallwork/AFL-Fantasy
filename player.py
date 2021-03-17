@@ -13,6 +13,7 @@ __license__ = "UWA"
 
 
 from sys import stdin, stdout
+from page import *
 import fileinput
 
 from urllib.request import *
@@ -58,6 +59,19 @@ clubMap = {
 "St Kilda": "St Kilda Saints",
 "North Melbourne": "North Melbourne Kangaroos"
 }
+
+positionMap = { "RUC": "Ruck",
+                "DEF": "Defender",
+                "MID": "Midfield",
+                "FWD": "Forward" }
+
+def getPossibleNames(firstName):
+    namesubstitutions = [["Josh", "Joshua"], ["Nicholas", "Nick", "Nic"], ["Mitch", "Mitchell"], ["Tim", "Timothy"], ["Jonathan", "John", "Jon", "Jonathon"],
+                        ["Oliver", "Ollie"]]
+    for subs in namesubstitutions:
+        if firstName in subs:
+            return subs
+    return []
 
 class Player():
 
@@ -129,17 +143,22 @@ def addPlayerPositionsToFile(players, filename):
 ############################################################
 def getPlayersFromDTTALKFile(filename):
     nametok = 0
+    postok = 1
     pricetok = 4
     players = []
     with fileinput.input(files=(filename)) as f:
         for line in f:
             vals = line.split(',')
-            name = vals[nametok]
             price = int(vals[pricetok])
-
+            name = vals[nametok]
             name = name.split()
             name = name[-1] +   " "+ " ".join(name[0:-1])
-            players.append(Player(name, None, price, None, None))
+            position = vals[postok]
+            if '/' in position: position = position.split('/')[0]
+            position = positionMap[position]
+            print(position)
+
+            players.append(Player(name, None, price, position, None))
 
     return players
 
@@ -167,62 +186,132 @@ def getPlayersFromPricesFile(filename, hasPosition):
 
             players.append(p)
     return players
-############################################################
-############################################################
-############################################################
-############################################################
 
-def playersToCSV(players):
-    import csv
-    toCSV = players
-    keys = toCSV[0].keys()
-    with open('players2019.csv', 'w', newline='')  as output_file:
-        dict_writer = csv.DictWriter(output_file, keys)
-        dict_writer.writeheader()
-        dict_writer.writerows(toCSV)
-
-
-
-def main():
-    """ Main entry point of the app """
-    players_prices = getPlayersFromDTTALKFile("players2019DTTALK.csv")
-
-    for pp in players_prices:
-        print(pp.__dict__)
-    players_averages = []
-    with fileinput.input(files=("players2019averages.csv")) as f:
+def getPlayersFromAveragesFile(filename):
+    players = []
+    with fileinput.input(files=(filename)) as f:
          i = 0
          for line in f:
              vals = line.split(",")
              name = vals[1]
              club = clubMap[vals[2]]
              value = vals[4].strip()
-             players_averages.append(Player(name, value, None, None, club))
+             players.append(Player(name, value, None, None, club))
+
+    return players
+
+def getPlayerPricesFromHardCode():
+    prices = {
+    "Josh P. Kennedy": 654000,
+    "Sydney Stack": 170000
+    }
+    return prices
+############################################################
+############################################################
+############################################################
+############################################################
+
+
+
+## ENCODE AND DECODE OUR PLAYER OBJECTS ##
+############################################################
+############################################################
+############################################################
+def playersToCSV(players, filename):
+    import csv
+    toCSV = players
+    keys = toCSV[0].keys()
+    with open(filename, 'w', newline='')  as output_file:
+        dict_writer = csv.DictWriter(output_file, keys)
+        dict_writer.writeheader()
+        dict_writer.writerows(toCSV)
+
+def playersFromCSV(filename):
+    nametok = 0
+    valuetok = 1
+    pricetok = 2
+    positiontok = 3
+    clubtok = 4
+    players = []
+    with open(filename, 'r', newline='')  as inputfile:
+        inputfile.readline()
+        for line in inputfile:
+            vals = line.split(",")
+            name = vals[nametok] if vals[nametok] != "" else None
+            club = vals[clubtok] if vals[clubtok] != "" else None
+            value = float(vals[valuetok]) if vals[valuetok] != "" else None
+            price = int(vals[pricetok]) if vals[pricetok] != "" else None
+            position = vals[positiontok] if vals[positiontok] != "" else None
+            players.append(Player(name, value, price, position, club))
+    return players
+############################################################
+############################################################
+############################################################
+############################################################
+
+
+## GET PLAYER DATA FOR 2019 ###
+def getAllPlayers2019():
+    players_prices = getPlayersFromDTTALKFile("players2019DTTALK.csv")
+    players_averages = getPlayersFromAveragesFile("players2019averages.csv")
+
+    ## ADD THE PRICES FROM THE FIRST FILE TO THE PLAYERS FROM THE SECOND FILE
     for pp in players_prices:
         found = False
         for pa in players_averages:
             if pp.name.lower() == pa.name.lower():
                 pa.price = pp.price
+                pa.position = pp.position
                 found = True
 
+    ## TRY THE OTHER LIST OF PRICES
     players_pricesOLD = getPlayersFromPricesFile("OLDplayers2019.csv", True)
     for pp in players_pricesOLD:
         found = False
         for pa in players_averages:
             if pp.name.lower() == pa.name.lower():
-                print(pp.name)
                 pa.price = pp.price
                 found = True
-    ##for pa in players_averages:
-    ##    position = getPlayerPositionFromSite(pa)
-    ##    pa.position = position
 
+    ## FIND NAMES WITH COMMON SUBSITUTES
+    hardCodedPrices = getPlayerPricesFromHardCode()
     for pa in players_averages:
-        #print(pa.__dict__)
-        continue
+        if pa.price == None:
+            firstName = pa.name.split()[0]
+            possibleNames = getPossibleNames(firstName)
+            for pn in possibleNames:
+                names = pa.name.split()
+                names[0] = pn
+                name = " ".join(names)
+                for pp in players_prices:
+                    if pp.name == name:
+                        #print(pp.name)
+                        print(name)
+                        pa.price = pp.price
+                        pa.position = pp.position
+            if pa.name in hardCodedPrices.keys():
+                pa.price = hardCodedPrices[pa.name]
 
-    players_averages = [pa.__dict__ for pa in players_averages]
-    playersToCSV(players_averages)
+        ## SEE IF THEIR PRICE IS ENTERED AT A LATER ROUND
+        getPartialSeasonPlayerMatrix(players_averages, 1, 3, "https://www.footywire.com/afl/footy/dream_team_round?year=2019&round=1&p=&s=T")
+
+        for pa in players_averages:
+            if pa.position == None:
+                getPlayerPositionFromSite(pa)
+        return players_averages
+
+
+def main():
+    """ Main entry point of the app """
+    # 
+    # players = getAllPlayers2019()
+    #
+    # playerdicts = []
+    # for p in players:
+    #     playerdicts.append(p.__dict__)
+    #
+    # playersToCSV(playerdicts, "newplayers2019.csv")
+    #
 
     #addPlayerPositionsToFile(players, "players2019.csv")
 
