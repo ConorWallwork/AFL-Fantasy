@@ -30,19 +30,30 @@ class Page():
         self.url = url
         self.getNextPage = getNextPage
         self.isLastPage = isLastPage
+        page = urlopen(self.url).read()
+        soup = BeautifulSoup(page)
+        self.soup = soup
+
+    def __init__(self, url, soup, getNextPage, isLastPage):
+        self.url = url
+        self.getNextPage = getNextPage
+        self.isLastPage = isLastPage
+        if soup != None:
+            self.soup = soup
+        else:
+            page = urlopen(self.url).read()
+            self.soup = BeautifulSoup(page)
+
 
     ## beautiful soup objects
     def getAllPages(self):
         page = urlopen(self.url).read()
         soup = BeautifulSoup(page)
-
-        while(True):
+        while(not self.isLastPage(soup)):
             yield soup
             soup = self.getNextPage(soup)
 
-            if(self.isLastPage(soup)):
-                yield soup
-                break
+        yield soup
 
 
 def partialseasonGetNextPage(soup):
@@ -65,6 +76,18 @@ def partialseasonIsLastPage(soup):
             return False
     return True
 
+def DTTALKcommentsGetNextPage(soup):
+    print(soup.find("div", "nav-previous"))
+    nextAnchor = soup.find("div", "nav-previous").find("a")
+    page = nextAnchor["href"]
+    page = urlopen(page).read()
+    soup = BeautifulSoup(page)
+    return soup
+
+def DTTALKcommentsIsLastPage(soup):
+    if soup.find("div", "nav-previous") == None:
+        return True
+    return soup.find("div", "nav-previous").find("a") == None
 # def getPartialSeasonPlayerMatrix(players, firstRound, lastRound, url):
 #     page = Page(url, partialseasonGetNextPage, partialseasonIsLastPage)
 #     playerNames = [p.name for p in players]

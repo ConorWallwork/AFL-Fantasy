@@ -153,7 +153,7 @@ def main():
         # print(p.name)
     #
     getPartialAverages(players, 1, 3, 2, "allrounds2020.csv")
-    playersToCSV(players, "players2020round3.csv")
+    playersToCSV(players, "players2020round3min2.csv")
     # playersToCSV(players, "players2019round5.csv")
     #
     # for p in players:

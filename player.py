@@ -65,13 +65,32 @@ positionMap = { "RUC": "Ruck",
                 "MID": "Midfield",
                 "FWD": "Forward" }
 
+
+## RETURN INDEX OF NAME IN NAME LIST ELSE -1
+def isInListNameSubstitution(name, namelist):
+    firstName = name.split()[0]
+    possibleNames = getPossibleNames(firstName)
+    for pn in possibleNames:
+        names = name.split()
+        if names[-1] == "Injured":
+            names = names[:-1]
+        names[0] = pn
+        name = " ".join(names)
+        i = 0
+        for checkname in namelist:
+            if name == checkname:
+                return i
+            i += 1
+    return -1
+
 def getPossibleNames(firstName):
     namesubstitutions = [["Josh", "Joshua"], ["Nicholas", "Nick", "Nic"], ["Mitch", "Mitchell"], ["Tim", "Timothy"], ["Jonathan", "John", "Jon", "Jonathon"],
-                        ["Oliver", "Ollie"], ["Dan", "Daniel"], ["Zac", "Zachary", "Zack", "Zach"], ["Thomas", "Tom"]]
+                        ["Oliver", "Ollie"], ["Dan", "Daniel"], ["Zac", "Zachary", "Zack", "Zach"], ["Thomas", "Tom"], ["Dominic", "Dom"], ["Lachlan", "Lachie", "Lachy",  "Lach"], ["Jackson", "Jack"], ["Edward", "Ed"], ["Matthew", "Matt"],
+                        ["Sam", "Samuel"], ["Harrison", "Harry"]]
     for subs in namesubstitutions:
         if firstName in subs:
             return subs
-    return []
+    return [firstName]
 
 class Player():
 
@@ -148,8 +167,15 @@ def getPlayersFromDTTALKFile(filename, usesFirstLastFormat):
     players = []
     with fileinput.input(files=(filename)) as f:
         for line in f:
+            if line == '\n': continue
+            print(line)
             vals = line.split(',')
+            # for v in vals:
+            #     # print(v)
             price = int(vals[pricetok])
+
+
+
             name = vals[nametok]
             if usesFirstLastFormat:
                 name = name ## do nothing
@@ -189,28 +215,34 @@ def getPlayerFromDTTALKFile(filename, usesFirstLastFormat, playerName):
                 return player
         return None
 
-def getPlayersFromPricesFile(filename, hasPosition):
+def getPlayersFromPricesFile(filename, hasPosition, hasValue):
     nametok = 1
     clubtok = 2
     pricetok = 4
+    valuetok = 5
     # pointstok = 7
     positiontok = 8
     players = []
 
     with fileinput.input(files=(filename)) as f:
         for line in f:
+            if line == '\n': continue
             vals = line.split(',')
-
+            value = 0
+            position = ""
             name = vals[nametok]
             club = clubMap[vals[clubtok]]
             price = int(vals[pricetok])
             # points = float(vals[pointstok].strip())
-            if(hasPosition):
-                position = vals[positiontok].strip()
-                p = Player(name, None, price, position, club)
-            else:
-                p = Player(name, None, price, "", club)
 
+            if hasValue:
+                value = vals[valuetok].strip()
+                value = float(value)
+
+            if hasPosition:
+                position = vals[positiontok].strip()
+
+            p = Player(name, value if hasValue else None, price, position if hasPosition else None, None)
             players.append(p)
     return players
 
@@ -219,6 +251,7 @@ def getPlayersFromAveragesFile(filename):
     with fileinput.input(files=(filename)) as f:
          i = 0
          for line in f:
+             if line == '\n': continue
              vals = line.split(",")
              name = vals[1]
              club = clubMap[vals[2]]
@@ -274,6 +307,15 @@ def playersFromCSV(filename):
 ############################################################
 ############################################################
 
+## RETURN A LIST WITH THE PPDS
+def getPlayerPointsPerDollar(players):
+    ppds = [0]*len(players)
+    for i in range(len(players)):
+        if players[i].price == None or players[i].value == None:
+            ppds[i] = 0
+            continue
+        ppds[i] = players[i].value / players[i].price
+    return ppds
 
 ## GET PLAYER DATA FOR A YEAR ###
 def getAllPlayers(player_averages_file, DTTALK_prices_file, usesFirstLastFormat, player_prices_file):
@@ -290,13 +332,13 @@ def getAllPlayers(player_averages_file, DTTALK_prices_file, usesFirstLastFormat,
                 found = True
 
     ## TRY THE OTHER LIST OF PRICES FROM FOOTY WIRE
-    players_pricesOLD = getPlayersFromPricesFile(player_prices_file, False)
-    for pp in players_pricesOLD:
-        found = False
-        for pa in players_averages:
-            if pp.name.lower() == pa.name.lower():
-                pa.price = pp.price
-                found = True
+    # players_pricesOLD = getPlayersFromPricesFile(player_prices_file, False)
+    # for pp in players_pricesOLD:
+    #     found = False
+    #     for pa in players_averages:
+    #         if pp.name.lower() == pa.name.lower():
+    #             pa.price = pp.price
+    #             found = True
 
     ## FIND NAMES WITH COMMON SUBSITUTES
     # hardCodedPrices = getPlayerPricesFromHardCode()
@@ -325,12 +367,39 @@ def getAllPlayers(player_averages_file, DTTALK_prices_file, usesFirstLastFormat,
             getPlayerPositionFromSite(pa)
     return players_averages
 
+def addPlayerPositionsToObjects(players):
+    for p in players:
+        if p.position == None:
+            p.position = getPlayerPositionFromSite(p)
+
+
 
 def main():
     """ Main entry point of the app """
     #
-    players = getAllPlayers("players2020averages.csv", "players2020DTTALK.csv", True, "players2020prices.csv")
-    playersToCSV(players, "players2020.csv")
+    # players = getAllPlayers("players2021averages.csv", "players2021DTTALK.csv", True, "players2021round2prices.csv")
+    # playersToCSV(players, "players2021.csv")
+
+    ## THERE NEEDS TO BE A FUNCTION TO JOIN PLAYERS OBJECTS
+    players = getPlayersFromPricesFile("players2021round2prices.csv", False, True)
+    playersPos = getPlayersFromDTTALKFile("players2021DTTALK.csv", True)
+    playersPosNames = [p.name for p in playersPos]
+
+    for p in players:
+        if isInListNameSubstitution(p.name, playersPosNames) != -1:
+            index = isInListNameSubstitution(p.name, playersPosNames)
+            p.position = playersPos[index].position
+
+
+
+    addPlayerPositionsToObjects(players)
+
+    for p in players:
+        if p.position == None:
+            print(p.name)
+
+
+
     #
     # playerdicts = []
     # for p in players:
