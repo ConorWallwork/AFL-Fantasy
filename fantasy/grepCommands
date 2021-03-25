@@ -1,9 +1,0 @@
-// FIND THE AVERAGE POINTS FOR A PLAYER
-while read p; do average=$(echo "$p" | grep -o "[0-9\.]\+$"); echo "$average"; done < averagepointsplayers2019.txt 
-
-playername=$(echo "$p" | cut -d ',' -f2)
-
-// GET PLAYERS NAME FROM FIRST FILE AND FIND THEIR AVERAGE POINTS
-while read p; do playername=$(echo "$p" | cut -d ',' -f2); points=$(grep "$playername" averagepointsplayers2019.txt | grep -o "[0-9\\.]\+$" || echo "0"); echo -n "$p"; echo "$points"; done < players2019.csv
-
-while read p; do playername=$(echo "$p" | cut -d ',' -f2); points=$(grep "$playername" averagepointsplayers2019.txt | grep -o "[0-9\\.]\+$" | tr -d '\r' || echo "0"); p=$(echo "$p" | tr -d '\r'); echo "$p,$points"; done < playersnoaverage2019.csv > players2019.csv
