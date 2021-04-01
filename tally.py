@@ -89,6 +89,14 @@ def main():
     players = getPlayersFromPricesFile("2021round2.csv")
 
     negatives = [p for p in players if p.name in myteam]
+    for p in negatives:
+        p.price = -p.price
+        p.points = -p.points
+
+
+
+
+
     # # comments = getAllCommentAllPages("https://dreamteamtalk.com/2020/03/12/my-team-2020-version-3-0/")
     # # comments = getRawComments(comments)
     #

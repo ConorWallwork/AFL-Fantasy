@@ -66,7 +66,8 @@ positionMap = { "RUC": "Ruck",
                 "FWD": "Forward" }
 
 
-## RETURN INDEX OF NAME IN NAME LIST ELSE -1
+## NEEDS BETTER NAMING (RETURNS INDEX)
+## NEEDS REFACTORING
 def isInListNameSubstitution(name, namelist):
     firstName = name.split()[0]
     possibleNames = getPossibleNames(firstName)
@@ -75,14 +76,16 @@ def isInListNameSubstitution(name, namelist):
         if names[-1] == "Injured":
             names = names[:-1]
         names[0] = pn
-        name = " ".join(names)
+        fullname = " ".join(names)
         i = 0
         for checkname in namelist:
-            if name == checkname:
+            if fullname == checkname:
                 return i
             i += 1
     return -1
 
+
+## SHOULD RETURN FULL NAMES FOR EASIER SEARCHING
 def getPossibleNames(firstName):
     namesubstitutions = [["Josh", "Joshua"], ["Nicholas", "Nick", "Nic"], ["Mitch", "Mitchell"], ["Tim", "Timothy"], ["Jonathan", "John", "Jon", "Jonathon"],
                         ["Oliver", "Ollie"], ["Dan", "Daniel"], ["Zac", "Zachary", "Zack", "Zach"], ["Thomas", "Tom"], ["Dominic", "Dom"], ["Lachlan", "Lachie", "Lachy",  "Lach"], ["Jackson", "Jack"], ["Edward", "Ed"], ["Matthew", "Matt"],
@@ -126,7 +129,7 @@ def getPlayerPositionFromSite(p):
 
         playerProfileData = soup.find_all(id="playerProfileData2")
         if(len(playerProfileData) == 0):
-            position = "not found"
+            position = None
         else:
             position = playerProfileData[0].get_text().split()[-1]
         print(position)
@@ -134,7 +137,7 @@ def getPlayerPositionFromSite(p):
         return position
 
 
-
+### DEPRECATED ###
 def addPlayerPositionsToFile(players, filename):
     with open(filename, 'r') as file:
         lines = file.readlines()
@@ -160,6 +163,9 @@ def addPlayerPositionsToFile(players, filename):
 ############################################################
 ############################################################
 ############################################################
+
+
+## NEEDS A LINEGETPLAYER HELPER
 def getPlayersFromDTTALKFile(filename, usesFirstLastFormat):
     nametok = 0
     postok = 1
@@ -214,7 +220,8 @@ def getPlayerFromDTTALKFile(filename, usesFirstLastFormat, playerName):
                 player = Player(name, None, price, position, None)
                 return player
         return None
-
+## NEEDS A LINEGETPLAYER HELPER
+## NEEDS OPTION TO ADD THE ROUND PRICE/SCORE TO PLAYER OBJECT
 def getPlayersFromPricesFile(filename, hasPosition, hasValue):
     nametok = 1
     clubtok = 2
@@ -242,10 +249,11 @@ def getPlayersFromPricesFile(filename, hasPosition, hasValue):
             if hasPosition:
                 position = vals[positiontok].strip()
 
-            p = Player(name, value if hasValue else None, price, position if hasPosition else None, None)
+            p = Player(name, value if hasValue else None, price, position if hasPosition else None, club)
             players.append(p)
     return players
 
+## NEEDS LINE_GET_PLAYER
 def getPlayersFromAveragesFile(filename):
     players = []
     with fileinput.input(files=(filename)) as f:
@@ -385,6 +393,7 @@ def main():
     playersPos = getPlayersFromDTTALKFile("players2021DTTALK.csv", True)
     playersPosNames = [p.name for p in playersPos]
 
+    ## NEED A GENERIC BINARY SEACH FUNCTION
     for p in players:
         if isInListNameSubstitution(p.name, playersPosNames) != -1:
             index = isInListNameSubstitution(p.name, playersPosNames)
@@ -397,6 +406,7 @@ def main():
     for p in players:
         if p.position == None:
             print(p.name)
+    playersToCSV(players, "players2021round2.toCSV")
 
 
 
