@@ -1,7 +1,7 @@
 # AFL-Fantasy
 ### player.py
 Contains utilities to scrape player data from known sources once they are downloaded into an excel spreadsheet. Also contains utilities to store and retrieve player list to/from csv files.
-### linearoptimisation.py
+### linear_optimisation.py
 Contains utilities to find the optimal team under a given budget from a list of players. When each player has a position, price, and projected points, the optimisation can be done.
 ### partialseason.py
 Contains utilities to generate averages between `firstRound` and `lastRound` for all players from a previous season.
