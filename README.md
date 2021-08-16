@@ -1,4 +1,7 @@
 # AFL-Fantasy
+## Example Usage:
+Clone the repo and run `python3 linear_optimisation.py`. This uses the file `players2021round2predictionsdup.csv` which was generated in Excel from round 1 scores. The result should be a list of 22 players which is the optimal team for round 2 of 2021 based on round 1 scores.
+
 ### player.py
 Contains utilities to scrape player data from known sources once they are downloaded into an excel spreadsheet. Also contains utilities to store and retrieve player list to/from csv files.
 ### linear_optimisation.py
