@@ -1,4 +1,5 @@
 # AFL-Fantasy
+Utilities to scrape player data for AFL fantasy, predict future scores, and generate optimisations for a starting 22 under the $13M budget.
 ## Example Usage:
 Clone the repo and run `python3 linear_optimisation.py`. This uses the file `players2021round2predictionsdup.csv` which was generated in Excel from round 1 scores. The result should be a list of 22 players which is the optimal team for round 2 of 2021 based on round 1 scores.
 
