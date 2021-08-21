@@ -68,6 +68,7 @@ positionMap = { "RUC": "Ruck",
 
 ## NEEDS BETTER NAMING (RETURNS INDEX)
 ## NEEDS REFACTORING
+## ----- this method should compare two names and check if they are nicknames of each other ##
 def isInListNameSubstitution(name, namelist):
     firstName = name.split()[0]
     possibleNames = getPossibleNames(firstName)
@@ -103,6 +104,13 @@ class Player():
         self.price = price
         self.position = position
         self.club = club
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __setattr__(self, name, value):
+        self.__dict__[name] = value
+
 
 
 ## DEPRECATED POSITION METHOD ##
@@ -165,115 +173,115 @@ def addPlayerPositionsToFile(players, filename):
 ############################################################
 
 
-## NEEDS A LINEGETPLAYER HELPER
-def getPlayersFromDTTALKFile(filename, usesFirstLastFormat):
-    nametok = 0
-    postok = 1
-    pricetok = 4
-    players = []
-    with fileinput.input(files=(filename)) as f:
-        for line in f:
-            if line == '\n': continue
-            print(line)
-            vals = line.split(',')
-            # for v in vals:
-            #     # print(v)
-            price = int(vals[pricetok])
-
-
-
-            name = vals[nametok]
-            if usesFirstLastFormat:
-                name = name ## do nothing
-            else:
-                name = name.split()
-                name = name[-1] +   " "+ " ".join(name[0:-1])
-            position = vals[postok]
-            if '/' in position: position = position.split('/')[0]
-            position = positionMap[position]
-
-            players.append(Player(name, None, price, position, None))
-
-    return players
-
-def getPlayerFromDTTALKFile(filename, usesFirstLastFormat, playerName):
-    with fileinput.input(files=(filename)) as f:
-        nametok = 0
-        postok = 1
-        pricetok = 4
-        player = None
-        with fileinput.input(files=(filename)) as f:
-            for line in f:
-                vals = line.split(',')
-                price = int(vals[pricetok])
-                name = vals[nametok]
-                if(name != playerName):
-                    continue
-                if usesFirstLastFormat:
-                    name = name ## do nothing
-                else:
-                    name = name.split()
-                    name = name[-1] +   " "+ " ".join(name[0:-1])
-                position = vals[postok]
-                if '/' in position: position = position.split('/')[0]
-                position = positionMap[position]
-                player = Player(name, None, price, position, None)
-                return player
-        return None
-## NEEDS A LINEGETPLAYER HELPER
-## NEEDS OPTION TO ADD THE ROUND PRICE/SCORE TO PLAYER OBJECT
-def getPlayersFromPricesFile(filename, hasPosition, hasValue):
-    nametok = 1
-    clubtok = 2
-    pricetok = 4
-    valuetok = 5
-    # pointstok = 7
-    positiontok = 8
-    players = []
-
-    with fileinput.input(files=(filename)) as f:
-        for line in f:
-            if line == '\n': continue
-            vals = line.split(',')
-            value = 0
-            position = ""
-            name = vals[nametok]
-            club = clubMap[vals[clubtok]]
-            price = int(vals[pricetok])
-            # points = float(vals[pointstok].strip())
-
-            if hasValue:
-                value = vals[valuetok].strip()
-                value = float(value)
-
-            if hasPosition:
-                position = vals[positiontok].strip()
-
-            p = Player(name, value if hasValue else None, price, position if hasPosition else None, club)
-            players.append(p)
-    return players
-
-## NEEDS LINE_GET_PLAYER
-def getPlayersFromAveragesFile(filename):
-    players = []
-    with fileinput.input(files=(filename)) as f:
-         i = 0
-         for line in f:
-             if line == '\n': continue
-             vals = line.split(",")
-             name = vals[1]
-             club = clubMap[vals[2]]
-             value = vals[4].strip()
-             players.append(Player(name, value, None, None, club))
-
-    return players
-
-def getPlayerPricesFromHardCode():
-    prices = {
-    "Josh P. Kennedy": 654000,
-    "Sydney Stack": 170000
-    }
-    return prices
+# ## NEEDS A LINEGETPLAYER HELPER
+# def getPlayersFromDTTALKFile(filename, usesFirstLastFormat):
+#     nametok = 0
+#     postok = 1
+#     pricetok = 4
+#     players = []
+#     with fileinput.input(files=(filename)) as f:
+#         for line in f:
+#             if line == '\n': continue
+#             print(line)
+#             vals = line.split(',')
+#             # for v in vals:
+#             #     # print(v)
+#             price = int(vals[pricetok])
+#
+#
+#
+#             name = vals[nametok]
+#             if usesFirstLastFormat:
+#                 name = name ## do nothing
+#             else:
+#                 name = name.split()
+#                 name = name[-1] +   " "+ " ".join(name[0:-1])
+#             position = vals[postok]
+#             if '/' in position: position = position.split('/')[0]
+#             position = positionMap[position]
+#
+#             players.append(Player(name, None, price, position, None))
+#
+#     return players
+#
+# def getPlayerFromDTTALKFile(filename, usesFirstLastFormat, playerName):
+#     with fileinput.input(files=(filename)) as f:
+#         nametok = 0
+#         postok = 1
+#         pricetok = 4
+#         player = None
+#         with fileinput.input(files=(filename)) as f:
+#             for line in f:
+#                 vals = line.split(',')
+#                 price = int(vals[pricetok])
+#                 name = vals[nametok]
+#                 if(name != playerName):
+#                     continue
+#                 if usesFirstLastFormat:
+#                     name = name ## do nothing
+#                 else:
+#                     name = name.split()
+#                     name = name[-1] +   " "+ " ".join(name[0:-1])
+#                 position = vals[postok]
+#                 if '/' in position: position = position.split('/')[0]
+#                 position = positionMap[position]
+#                 player = Player(name, None, price, position, None)
+#                 return player
+#         return None
+# ## NEEDS A LINEGETPLAYER HELPER
+# ## NEEDS OPTION TO ADD THE ROUND PRICE/SCORE TO PLAYER OBJECT
+# def getPlayersFromPricesFile(filename, hasPosition, hasValue):
+#     nametok = 1
+#     clubtok = 2
+#     pricetok = 4
+#     valuetok = 5
+#     # pointstok = 7
+#     positiontok = 8
+#     players = []
+#
+#     with fileinput.input(files=(filename)) as f:
+#         for line in f:
+#             if line == '\n': continue
+#             vals = line.split(',')
+#             value = 0
+#             position = ""
+#             name = vals[nametok]
+#             club = clubMap[vals[clubtok]]
+#             price = int(vals[pricetok])
+#             # points = float(vals[pointstok].strip())
+#
+#             if hasValue:
+#                 value = vals[valuetok].strip()
+#                 value = float(value)
+#
+#             if hasPosition:
+#                 position = vals[positiontok].strip()
+#
+#             p = Player(name, value if hasValue else None, price, position if hasPosition else None, club)
+#             players.append(p)
+#     return players
+#
+# ## NEEDS LINE_GET_PLAYER
+# def getPlayersFromAveragesFile(filename):
+#     players = []
+#     with fileinput.input(files=(filename)) as f:
+#          i = 0
+#          for line in f:
+#              if line == '\n': continue
+#              vals = line.split(",")
+#              name = vals[1]
+#              club = clubMap[vals[2]]
+#              value = vals[4].strip()
+#              players.append(Player(name, value, None, None, club))
+#
+#     return players
+#
+# def getPlayerPricesFromHardCode():
+#     prices = {
+#     "Josh P. Kennedy": 654000,
+#     "Sydney Stack": 170000
+#     }
+#     return prices
 ############################################################
 ############################################################
 ############################################################
@@ -326,54 +334,56 @@ def getPlayerPointsPerDollar(players):
     return ppds
 
 ## GET PLAYER DATA FOR A YEAR ###
-def getAllPlayers(player_averages_file, DTTALK_prices_file, usesFirstLastFormat, player_prices_file):
-    players_prices = getPlayersFromDTTALKFile(DTTALK_prices_file, usesFirstLastFormat)
-    players_averages = getPlayersFromAveragesFile(player_averages_file)
 
-    ## ADD THE PRICES FROM DTTALK FILE TO THE AVERAGES FILE
-    for pp in players_prices:
-        found = False
-        for pa in players_averages:
-            if pp.name.lower() == pa.name.lower():
-                pa.price = pp.price
-                pa.position = pp.position
-                found = True
-
-    ## TRY THE OTHER LIST OF PRICES FROM FOOTY WIRE
-    # players_pricesOLD = getPlayersFromPricesFile(player_prices_file, False)
-    # for pp in players_pricesOLD:
-    #     found = False
-    #     for pa in players_averages:
-    #         if pp.name.lower() == pa.name.lower():
-    #             pa.price = pp.price
-    #             found = True
-
-    ## FIND NAMES WITH COMMON SUBSITUTES
-    # hardCodedPrices = getPlayerPricesFromHardCode()
-    for pa in players_averages:
-        if pa.price == None:
-            firstName = pa.name.split()[0]
-            possibleNames = getPossibleNames(firstName)
-            for pn in possibleNames:
-                names = pa.name.split()
-                names[0] = pn
-                name = " ".join(names)
-                print(name)
-                for pp in players_prices:
-                    if pp.name == name:
-                        #print(pp.name)
-                        pa.price = pp.price
-                        pa.position = pp.position
-            # if pa.name in hardCodedPrices.keys():
-            #     pa.price = hardCodedPrices[pa.name]
-
-        ## SEE IF THEIR PRICE IS ENTERED AT A LATER ROUND
-        # getPartialSeasonPlayerMatrix(players_averages, 1, 3, "https://www.footywire.com/afl/footy/dream_team_round?year=2019&round=1&p=&s=T")
-
-    for pa in players_averages:
-        if pa.position == None:
-            getPlayerPositionFromSite(pa)
-    return players_averages
+## ---- this method is no longer needed when we have mergePlayerLists function ##
+# def getAllPlayers(player_averages_file, DTTALK_prices_file, usesFirstLastFormat, player_prices_file):
+#     players_prices = getPlayersFromDTTALKFile(DTTALK_prices_file, usesFirstLastFormat)
+#     players_averages = getPlayersFromAveragesFile(player_averages_file)
+#
+#     ## ADD THE PRICES FROM DTTALK FILE TO THE AVERAGES FILE
+#     for pp in players_prices:
+#         found = False
+#         for pa in players_averages:
+#             if pp.name.lower() == pa.name.lower():
+#                 pa.price = pp.price
+#                 pa.position = pp.position
+#                 found = True
+#
+#     ## TRY THE OTHER LIST OF PRICES FROM FOOTY WIRE
+#     # players_pricesOLD = getPlayersFromPricesFile(player_prices_file, False)
+#     # for pp in players_pricesOLD:
+#     #     found = False
+#     #     for pa in players_averages:
+#     #         if pp.name.lower() == pa.name.lower():
+#     #             pa.price = pp.price
+#     #             found = True
+#
+#     ## FIND NAMES WITH COMMON SUBSITUTES
+#     # hardCodedPrices = getPlayerPricesFromHardCode()
+#     for pa in players_averages:
+#         if pa.price == None:
+#             firstName = pa.name.split()[0]
+#             possibleNames = getPossibleNames(firstName)
+#             for pn in possibleNames:
+#                 names = pa.name.split()
+#                 names[0] = pn
+#                 name = " ".join(names)
+#                 print(name)
+#                 for pp in players_prices:
+#                     if pp.name == name:
+#                         #print(pp.name)
+#                         pa.price = pp.price
+#                         pa.position = pp.position
+#             # if pa.name in hardCodedPrices.keys():
+#             #     pa.price = hardCodedPrices[pa.name]
+#
+#         ## SEE IF THEIR PRICE IS ENTERED AT A LATER ROUND
+#         # getPartialSeasonPlayerMatrix(players_averages, 1, 3, "https://www.footywire.com/afl/footy/dream_team_round?year=2019&round=1&p=&s=T")
+#
+#     for pa in players_averages:
+#         if pa.position == None:
+#             getPlayerPositionFromSite(pa)
+#     return players_averages
 
 def addPlayerPositionsToObjects(players):
     for p in players:
