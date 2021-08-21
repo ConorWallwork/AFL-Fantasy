@@ -21,53 +21,6 @@ from bs4 import BeautifulSoup
 
 
 
-clubMap = {
-"Power": "Port Adelaide Power",
-"Giants": "Greater Western Sydney Giants",
-"Crows": "Adeliade Crows",
-"Eagles": "West Coast Eagles",
-"Bulldogs": "Western Bulldogs",
-"Demons": "Melbourne Demons",
-"Swans": "Sydney Swans",
-"Magpies": "Collingwood Magpies",
-"Kangaroos": "North Melbourne Kangaroos",
-"Tigers" : "Richmond Tigers",
-"Blues": "Carlton Blues",
-"Dockers": "Fremantle Dockers",
-"Suns": "Gold Coast Suns",
-"Saints": "St Kilda Saints",
-"Hawks": "Hawthorn Hawks",
-"Lions": "Brisbane Lions",
-"Bombers": "Essendon Bombers",
-"Cats": "Geelong Cats",
-"Collingwood": "Collingwood Magpies",
-"Western Bulldogs": "Western Bulldogs",
-"West Coast": "West Coast Eagles",
-"GWS": "Greater Western Sydney Giants",
-"Melbourne": "Melbourne Demons",
-"Adelaide": "Adeliade Crows",
-"Essendon": "Essendon Bombers",
-"Sydney": "Sydney Swans",
-"Geelong": "Geelong Cats",
-"Port Adelaide": "Port Adelaide Power",
-"Fremantle": "Fremantle Dockers",
-"Gold Coast": "Gold Coast Suns",
-"Brisbane": "Brisbane Lions",
-"Richmond": "Richmond Tigers",
-"Carlton": "Carlton Blues",
-"Hawthorn": "Hawthorn Hawks",
-"St Kilda": "St Kilda Saints",
-"North Melbourne": "North Melbourne Kangaroos"
-}
-
-positionMap = { "RUC": "Ruck",
-                "DEF": "Defender",
-                "MID": "Midfield",
-                "FWD": "Forward" }
-
-
-
-
 class Player():
 
     def __init__(self, name, value, price, position, club):
@@ -83,8 +36,46 @@ class Player():
     def __setattr__(self, name, value):
         self.__dict__[name] = value
 
+## Store player attributes that aren't in players1[i] from players2[i] into players1[i]. Optionally return
+## the common players or the players that aren't common to both
+def mergePlayerLists(players1, players2, returnCommonPlayers = False):
+    list.sort(players1, key=lambda player: player.name)
+    list.sort(players2, key=lambda player: player.name)
+    pointer1 = 0
+    pointer2 = 0
+    ## If there are no attributes missing then commons simply returns the players
+    ## common to both with their original values
+    commons = [[], []]
+    uncommons = [[], []]
 
-
+    while(pointer1 < len(players1) and pointer2 < len(players2)):
+        if(players1[pointer1].name > players2[pointer2].name):
+            uncommons[1].append(players2[pointer2])
+            pointer2 += 1
+        elif(players1[pointer1].name < players2[pointer2].name):
+            uncommons[0].append(players1[pointer1])
+            pointer1 += 1
+        else:
+            if players1[pointer1].value == None:
+                players1[pointer1].value = players2[pointer2].value
+            if players1[pointer1].price == None:
+                players1[pointer1].price = players2[pointer2].price
+            if players1[pointer1].position == None:
+                players1[pointer1].position = players2[pointer2].position
+            if players1[pointer1].club == None:
+                players1[pointer1].club = players2[pointer2].club
+            commons[0].append(players1[pointer1])
+            commons[1].append(players2[pointer2])
+            pointer1 += 1
+            pointer2 += 1
+    ## got to the end of players1
+    if(pointer1 == len(players1)):
+        ## append the rest of the players from players2
+        players1 += players2[pointer2:]
+    if(returnCommonPlayers):
+        return commons
+    else:
+        return uncommons
 
 ## SHOULD RETURN FULL NAMES FOR EASIER SEARCHING
 def getPossibleNames(firstName):
@@ -95,6 +86,53 @@ def getPossibleNames(firstName):
         if firstName in subs:
             return subs
     return [firstName]
+
+
+
+## ENCODE AND DECODE OUR PLAYER OBJECTS ##
+############################################################
+############################################################
+############################################################
+def playersToCSV(players, filename):
+    import csv
+    toCSV = [player.__dict__ for player in players]
+    keys = toCSV[0].keys()
+    with open(filename, 'w', newline='')  as output_file:
+        dict_writer = csv.DictWriter(output_file, keys)
+        dict_writer.writerows(toCSV)
+
+def playersFromCSV(filename):
+    nametok = 0
+    valuetok = 1
+    pricetok = 2
+    positiontok = 3
+    clubtok = 4
+    players = []
+    with open(filename, 'r', newline='')  as inputfile:
+        for line in inputfile:
+            vals = line.split(",")
+            name = vals[nametok] if vals[nametok] != "" else None
+            club = vals[clubtok].strip() if vals[clubtok] != "" else None
+            value = float(vals[valuetok]) if vals[valuetok] != "" else None
+            price = int(vals[pricetok]) if vals[pricetok] != "" else None
+            position = vals[positiontok] if vals[positiontok] != "" else None
+            players.append(Player(name, value, price, position, club))
+    return players
+############################################################
+############################################################
+############################################################
+############################################################
+
+## RETURN A LIST WITH THE PPDS
+def getPlayerPointsPerDollar(players):
+    ppds = [0]*len(players)
+    for i in range(len(players)):
+        if players[i].price == None or players[i].value == None:
+            ppds[i] = 0
+            continue
+        ppds[i] = players[i].value / players[i].price
+    return ppds
+
 
 ## NEEDS BETTER NAMING (RETURNS INDEX)
 ## NEEDS REFACTORING
@@ -292,51 +330,6 @@ def addPlayerPositionsToFile(players, filename):
 ############################################################
 
 
-
-## ENCODE AND DECODE OUR PLAYER OBJECTS ##
-############################################################
-############################################################
-############################################################
-def playersToCSV(players, filename):
-    import csv
-    toCSV = [player.__dict__ for player in players]
-    keys = toCSV[0].keys()
-    with open(filename, 'w', newline='')  as output_file:
-        dict_writer = csv.DictWriter(output_file, keys)
-        dict_writer.writerows(toCSV)
-
-def playersFromCSV(filename):
-    nametok = 0
-    valuetok = 1
-    pricetok = 2
-    positiontok = 3
-    clubtok = 4
-    players = []
-    with open(filename, 'r', newline='')  as inputfile:
-        for line in inputfile:
-            vals = line.split(",")
-            name = vals[nametok] if vals[nametok] != "" else None
-            club = vals[clubtok].strip() if vals[clubtok] != "" else None
-            value = float(vals[valuetok]) if vals[valuetok] != "" else None
-            price = int(vals[pricetok]) if vals[pricetok] != "" else None
-            position = vals[positiontok] if vals[positiontok] != "" else None
-            players.append(Player(name, value, price, position, club))
-    return players
-############################################################
-############################################################
-############################################################
-############################################################
-
-## RETURN A LIST WITH THE PPDS
-def getPlayerPointsPerDollar(players):
-    ppds = [0]*len(players)
-    for i in range(len(players)):
-        if players[i].price == None or players[i].value == None:
-            ppds[i] = 0
-            continue
-        ppds[i] = players[i].value / players[i].price
-    return ppds
-
 ## GET PLAYER DATA FOR A YEAR ###
 
 ## ---- this method is no longer needed when we have mergePlayerLists function ##
@@ -398,13 +391,15 @@ def addPlayerPositionsToObjects(players):
 
 def main():
     """ Main entry point of the app """
-    playersPrices = playersFromCSV("players2021prices.csv")
-    standardisePositions(playersPrices)
-    playersToCSV(playersPrices, "players2021prices.csv")
+    players2021prices = playersFromCSV("csv/players2021prices.csv")
+    players2021averages = playersFromCSV("csv/players2021averages.csv")
 
-
-
-
+    uncommons = mergePlayerLists(players2021prices, players2021averages)
+    print(len(uncommons[0]))
+    print("prices uncommon^")
+    print(len(uncommons[1]))
+    print(len(players2021prices))
+    playersToCSV(players2021prices, "players2021.csv")
 
 if __name__ == "__main__":
     """ This is executed when run from the command line """

@@ -50,14 +50,14 @@ positionMap = { "RUC": "Ruck",
                 "FWD": "Forward" }
 
 
-
-
+## indexesMap contains the indexes of each attribute in the rows
+## functionsMap contains the functions to generate values from the table data
+## for example. A table may list positions as "RUC" but we want "Ruck"
 class PlayerTable:
     def __init__(self, tableFile, indexesMap, functionsMap):
         self.tableFile = tableFile
         self.indexesMap = indexesMap
-        self.shortHandClubs = shortHandClubs
-        self.shortHandPositions = shortHandPositions
+        self.functionsMap = functionsMap
 
 
 
@@ -67,39 +67,46 @@ class PlayerTable:
             soup = BeautifulSoup(fp, 'html.parser')
             players = []
 
-        # if(self.hasHeaders):
-        #     headers = soup.find_all("tr")[0]
-        #     for cell in headers.find_all("td"):
-        #         self.headers.append(cell.text)
         for row in soup.find_all("tr"):
             player = Player("", "", "", "", "")
             cells = row.find_all("td")
             for key in self.indexesMap.keys():
                 value = cells[self.indexesMap[key]].text
-                if(key == "position" and self.shortHandPositions):
-                    if("/" in value):
-                        value = value.split("/")[0]
-                    value = positionMap[value]
-                if(key == "club" and self.shortHandClubs):
-                    value = clubMap[value]
+                value = self.functionsMap[key](value)
                 setattr(player, key, value)
             players.append(player)
         return players
 
+## choose the first position in "pos1/pos2" string
+def DTTalkPositions(position):
+    if("/" in position):
+        position = position.split("/")[0]
+    position = positionMap[position]
+    return position
 
+## EG ["Zac", "Zachary", "Zack", "Zach"] -> any of these goes to Zac
+def standardiseName(name):
+    names = name.split()
+    possibleFirstNames = getPossibleNames(names[0])
+    names[0] = possibleFirstNames[0]
+    return " ".join(names)
 
 
 def main():
     indexesMap = {
-                    "name":0,
-                    "position":2,
-                    "price": 7
+                    "name":1,
+                    "club":2,
+                    "value": 5
     }
-    pricestable = PlayerTable('html_tables/2021prices.html', indexesMap)
+    functionsMap = {
+                    "name": standardiseName,
+                    "club": lambda club: clubMap[club],
+                    "value": lambda value: value ## the cell data does not need to be changed
+    }
+    pricestable = PlayerTable('html_tables/2021averages.html', indexesMap, functionsMap)
     players = pricestable.tableToPlayers()
-    playersToCSV(players, "players2021prices.csv")
+    playersToCSV(players, "players2021averages.csv")
 
-    playerprices = playersFromCSV("players2021prices.csv")
 
 if __name__ == '__main__':
     main()
