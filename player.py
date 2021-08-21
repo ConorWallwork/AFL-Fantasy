@@ -66,6 +66,36 @@ positionMap = { "RUC": "Ruck",
                 "FWD": "Forward" }
 
 
+
+
+class Player():
+
+    def __init__(self, name, value, price, position, club):
+        self.name = name
+        self.value = value
+        self.price = price
+        self.position = position
+        self.club = club
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __setattr__(self, name, value):
+        self.__dict__[name] = value
+
+
+
+
+## SHOULD RETURN FULL NAMES FOR EASIER SEARCHING
+def getPossibleNames(firstName):
+    namesubstitutions = [["Josh", "Joshua"], ["Nicholas", "Nick", "Nic"], ["Mitch", "Mitchell"], ["Tim", "Timothy"], ["Jonathan", "John", "Jon", "Jonathon"],
+                        ["Oliver", "Ollie"], ["Dan", "Daniel"], ["Zac", "Zachary", "Zack", "Zach"], ["Thomas", "Tom"], ["Dominic", "Dom"], ["Lachlan", "Lachie", "Lachy",  "Lach"], ["Jackson", "Jack"], ["Edward", "Ed"], ["Matthew", "Matt"],
+                        ["Sam", "Samuel"], ["Harrison", "Harry"]]
+    for subs in namesubstitutions:
+        if firstName in subs:
+            return subs
+    return [firstName]
+
 ## NEEDS BETTER NAMING (RETURNS INDEX)
 ## NEEDS REFACTORING
 ## ----- this method should compare two names and check if they are nicknames of each other ##
@@ -84,32 +114,6 @@ def isInListNameSubstitution(name, namelist):
                 return i
             i += 1
     return -1
-
-
-## SHOULD RETURN FULL NAMES FOR EASIER SEARCHING
-def getPossibleNames(firstName):
-    namesubstitutions = [["Josh", "Joshua"], ["Nicholas", "Nick", "Nic"], ["Mitch", "Mitchell"], ["Tim", "Timothy"], ["Jonathan", "John", "Jon", "Jonathon"],
-                        ["Oliver", "Ollie"], ["Dan", "Daniel"], ["Zac", "Zachary", "Zack", "Zach"], ["Thomas", "Tom"], ["Dominic", "Dom"], ["Lachlan", "Lachie", "Lachy",  "Lach"], ["Jackson", "Jack"], ["Edward", "Ed"], ["Matthew", "Matt"],
-                        ["Sam", "Samuel"], ["Harrison", "Harry"]]
-    for subs in namesubstitutions:
-        if firstName in subs:
-            return subs
-    return [firstName]
-
-class Player():
-
-    def __init__(self, name, value, price, position, club):
-        self.name = name
-        self.value = value
-        self.price = price
-        self.position = position
-        self.club = club
-
-    def __getitem__(self, key):
-        return getattr(self, key)
-
-    def __setattr__(self, name, value):
-        self.__dict__[name] = value
 
 
 
@@ -394,41 +398,13 @@ def addPlayerPositionsToObjects(players):
 
 def main():
     """ Main entry point of the app """
-    #
-    # players = getAllPlayers("players2021averages.csv", "players2021DTTALK.csv", True, "players2021round2prices.csv")
-    # playersToCSV(players, "players2021.csv")
-
-    ## THERE NEEDS TO BE A FUNCTION TO JOIN PLAYERS OBJECTS
-    players = getPlayersFromPricesFile("players2021round2prices.csv", False, True)
-    playersPos = getPlayersFromDTTALKFile("players2021DTTALK.csv", True)
-    playersPosNames = [p.name for p in playersPos]
-
-    ## NEED A GENERIC BINARY SEACH FUNCTION
-    for p in players:
-        if isInListNameSubstitution(p.name, playersPosNames) != -1:
-            index = isInListNameSubstitution(p.name, playersPosNames)
-            p.position = playersPos[index].position
+    playersPrices = playersFromCSV("players2021prices.csv")
+    standardisePositions(playersPrices)
+    playersToCSV(playersPrices, "players2021prices.csv")
 
 
 
-    addPlayerPositionsToObjects(players)
 
-    for p in players:
-        if p.position == None:
-            print(p.name)
-    playersToCSV(players, "players2021round2.toCSV")
-
-
-
-    #
-    # playerdicts = []
-    # for p in players:
-    #     playerdicts.append(p.__dict__)
-    #
-    # playersToCSV(playerdicts, "newplayers2019.csv")
-    #
-
-    #addPlayerPositionsToFile(players, "players2019.csv")
 
 if __name__ == "__main__":
     """ This is executed when run from the command line """
